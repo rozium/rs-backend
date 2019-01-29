@@ -1,0 +1,5 @@
+SECRET_KEY = 'disinisecretkeay'
+SQLALCHEMY_DATABASE_URI = 'db:///path/to/db'
+
+ADMIN_USERNAME = 'adminusername'
+ADMIN_PASSWORD = 'md5(adminpassword)'
