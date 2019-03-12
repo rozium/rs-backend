@@ -9,8 +9,12 @@ import datetime
 from functools import wraps
 from flask_sqlalchemy import SQLAlchemy
 from flask import Flask, request, jsonify, make_response
+from flask_cors import CORS
 
 app = Flask(__name__)
+
+# set resources and origins access
+CORS(app, resources={r"/login": {"origins": "http://localhost:3000"}, r"/public/*": {"origins": "*"}})
 
 app.config.from_pyfile('rs.cfg')
 
