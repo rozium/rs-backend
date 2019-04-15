@@ -6,6 +6,7 @@
 import jwt
 import hashlib
 import datetime
+import json
 from functools import wraps
 from flask_sqlalchemy import SQLAlchemy
 from flask import Flask, request, jsonify, make_response
@@ -154,7 +155,7 @@ def get_all_news():
 @app.route('/news', methods=['POST'])
 def create_news():
   data = request.get_json()
-  news = News(content=data['content'], created_at=datetime.datetime.now())
+  news = News(content=json.dumps(data['content']), created_at=datetime.datetime.now())
   db.session.add(news)
   db.session.commit()
   return jsonify({ 'status': 201, 'message': 'create success'})
