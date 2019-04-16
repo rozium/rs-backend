@@ -5,6 +5,7 @@
 import jwt
 import hashlib
 import datetime
+import json
 from functools import wraps
 from flask_sqlalchemy import SQLAlchemy
 from flask import Flask, request, jsonify, make_response
@@ -38,12 +39,9 @@ class Profile(db.Model):
 
 class News(db.Model):
   id = db.Column(db.Integer, primary_key=True)
-  title = db.Column(db.String(100))
   content = db.Column(db.Text)
   created_at = db.Column(db.DateTime)
   updated_at = db.Column(db.DateTime)
-  images = db.Column(db.Text)
-  images_caption = db.Column(db.Text)
 
 class Donation(db.Model):
   id = db.Column(db.Integer, primary_key=True)
@@ -155,12 +153,9 @@ def get_all_news():
   def convert_to_json(object):
     return {
       'id': object.id,
-      'title': object.title,
       'content': object.content,
       'created_at': object.created_at,
       'updated_at': object.updated_at,
-      'images': object.images,
-      'images_caption': object.images_caption
     }
   data = jsonify(list(map(convert_to_json, news)))
   return data
@@ -169,11 +164,8 @@ def get_all_news():
 @token_required
 def create_news():
   data = request.get_json()
-  news = News(title=data['title'],
-              content=data['content'],
-              created_at=datetime.datetime.now(),
-              images=data['images'],
-              images_caption=data['images_caption'])
+  news = News(content=json.dumps(data['content']),
+              created_at=datetime.datetime.now())
   db.session.add(news)
   db.session.commit()
   return jsonify({ 'status': 201, 'message': 'create success'})
@@ -184,11 +176,8 @@ def update_news():
   data = request.get_json()
   news_id = data['id']
   news = News.query.filter_by(id=news_id).first()
-  news.title = data['title']
   news.content = data['content']
   news.updated_at = datetime.datetime.now()
-  news.images = data['images']
-  news.images_caption = data['images_caption']
   db.session.commit()
   return jsonify({ 'status': 200, 'message': 'update success' })
 
