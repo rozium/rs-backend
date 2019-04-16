@@ -1,7 +1,6 @@
 #!/usr/bin/env python
 
 # Rumah Sahaja backend
-# created by um
 
 import jwt
 import hashlib
@@ -11,20 +10,19 @@ from functools import wraps
 from flask_sqlalchemy import SQLAlchemy
 from flask import Flask, request, jsonify, make_response
 from flask_cors import CORS
-# from models import Profile, News, Donation
 
 app = Flask(__name__)
+app.config.from_pyfile('rs.cfg')
+
+__DEBUG__ = True
+__FrontEndURL__ = "http://localhost:3000"
 
 # set resources and origins access
-CORS(app, resources={r"/login": {"origins": "http://localhost:3000"}, r"/*": {"origins": "*"}})
-
-app.config.from_pyfile('rs.cfg')
+CORS(app, resources={r"/*": {"origins": __FrontEndURL__}})
 
 db = SQLAlchemy(app)
 
-# AKU GABUNGIN DULU SEMUA DISINI YA GANGERTI INPUT2 DI PYTHON WKWK
-
-# MODEL
+# MODEL ######################################################################################################################
 
 class Profile(db.Model):
   id = db.Column(db.Integer, primary_key=True)
@@ -54,6 +52,8 @@ class Donation(db.Model):
   receipt = db.Column(db.Text)
   created_at = db.Column(db.DateTime)
 
+# TOKEN ######################################################################################################################
+
 def token_required(f):
   @wraps(f)
   def decorated(*args, **kwargs):
@@ -75,6 +75,8 @@ def token_required(f):
 
   return decorated
 
+# LOGIN ######################################################################################################################
+
 @app.route('/login')
 def login():
   auth = request.authorization
@@ -91,12 +93,8 @@ def login():
 
   return make_response('Could not verify', 401, {'WWW-Authenticate' : 'Basic realm="Login required!"'})
 
-@app.route('/test', methods=['GET'])
-@token_required
-def test(verified):
-  return jsonify({'test': 'success'})
 
-# API Profil
+# API PROFILE ################################################################################################################
 
 @app.route('/profile', methods=['GET'])
 def get_profile():
@@ -114,6 +112,7 @@ def get_profile():
   return data
 
 @app.route('/profile', methods=['PUT'])
+@token_required
 def update_profile():
   profile = Profile.query.first()
   data = request.get_json()
@@ -130,14 +129,23 @@ def update_profile():
   return jsonify({ 'status': 200, 'message': 'update success' })
 
 @app.route('/profile', methods=['POST'])
+@token_required
 def create_profile():
   data = request.get_json()
-  news = Profile(name=data['name'], phone=data['phone'], address=data['address'], about=data['about'], vision=data['vision'], mission=data['mission'], link=data['link'], created_at=datetime.datetime.now())
+  news = Profile(name=data['name'],
+                 phone=data['phone'],
+                 email=data['email'],
+                 address=data['address'],
+                 about=data['about'],
+                 vision=data['vision'],
+                 mission=data['mission'],
+                 link=data['link'],
+                 created_at=datetime.datetime.now())
   db.session.add(news)
   db.session.commit()
   return jsonify({ 'status': 201, 'message': 'create success'})
 
-# API News
+# API News ####################################################################################################################
 
 @app.route('/news', methods=['GET'])
 def get_all_news():
@@ -153,14 +161,17 @@ def get_all_news():
   return data
 
 @app.route('/news', methods=['POST'])
+@token_required
 def create_news():
   data = request.get_json()
-  news = News(content=json.dumps(data['content']), created_at=datetime.datetime.now())
+  news = News(content=json.dumps(data['content']),
+              created_at=datetime.datetime.now())
   db.session.add(news)
   db.session.commit()
   return jsonify({ 'status': 201, 'message': 'create success'})
 
 @app.route('/news', methods=['PUT'])
+@token_required
 def update_news():
   data = request.get_json()
   news_id = data['id']
@@ -171,15 +182,17 @@ def update_news():
   return jsonify({ 'status': 200, 'message': 'update success' })
 
 @app.route('/news/<news_id>', methods=['DELETE'])
+@token_required
 def delete_news(news_id):
   news = News.query.filter_by(id=news_id).first()
   db.session.delete(news)
   db.session.commit()
   return jsonify({ 'status': 200, 'message': 'delete success'})
 
-# API Donation
+# API Donation #################################################################################################################
 
 @app.route('/donation', methods=['GET'])
+@token_required
 def get_all_donations():
   donation = Donation.query.all()
   def convert_to_json(object):
@@ -196,12 +209,20 @@ def get_all_donations():
   return data
 
 @app.route('/donation', methods=['POST'])
+@token_required
 def create_donation():
   data = request.get_json()
-  donation = Donation(name=data['name'], phone=data['phone'], email=data['email'], amount=data['amount'], receipt=data['receipt'], created_at=datetime.datetime.now())
+  donation = Donation(name=data['name'],
+                      phone=data['phone'],
+                      email=data['email'],
+                      amount=data['amount'],
+                      receipt=data['receipt'],
+                      created_at=datetime.datetime.now())
   db.session.add(donation)
   db.session.commit()
   return jsonify({ 'status': 201, 'message': 'create success'})
 
+# Main #################################################################################################################
+
 if __name__ == '__main__':
-  app.run(debug=True)
+  app.run(debug=__DEBUG__)
