@@ -132,7 +132,7 @@ def update_profile():
 @token_required
 def create_profile():
   data = request.get_json()
-  news = Profile(name=data['name'],
+  profile = Profile(name=data['name'],
                  phone=data['phone'],
                  email=data['email'],
                  address=data['address'],
@@ -141,7 +141,7 @@ def create_profile():
                  mission=data['mission'],
                  link=data['link'],
                  created_at=datetime.datetime.now())
-  db.session.add(news)
+  db.session.add(profile)
   db.session.commit()
   return jsonify({ 'status': 201, 'message': 'create success'})
 
