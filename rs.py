@@ -167,6 +167,8 @@ def get_all_news():
 def create_news():
   data = request.get_json()
   news = News(content=json.dumps(data['content']),
+              title=data['title'],
+              thumbnail=data['thumbnail'],
               created_at=datetime.datetime.now())
   db.session.add(news)
   db.session.commit()
@@ -178,7 +180,9 @@ def update_news():
   data = request.get_json()
   news_id = data['id']
   news = News.query.filter_by(id=news_id).first()
-  news.content = data['content']
+  news.content = json.dumps(data['content'])
+  news.title = data['title']
+  news.thumbnail = data['thumbnail']
   news.updated_at = datetime.datetime.now()
   db.session.commit()
   return jsonify({ 'status': 200, 'message': 'update success' })
